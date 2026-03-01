@@ -1,0 +1,14 @@
+# Fichier de clé API App Store Connect
+# À générer sur : https://appstoreconnect.apple.com/access/api
+# NE PAS COMMITTER CE FICHIER (déjà dans .gitignore)
+
+# Exemple de structure :
+# {
+#   "key_id": "XXXXXXXXXX",
+#   "issuer_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+#   "key": "-----BEGIN EC PRIVATE KEY-----\n...\n-----END EC PRIVATE KEY-----",
+#   "in_house": false
+# }
+
+# Ce fichier est ignoré par git.
+# En CI/CD, la clé est injectée via les secrets GitHub.

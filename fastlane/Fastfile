@@ -1,0 +1,64 @@
+default_platform(:ios)
+
+platform :ios do
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    # Incrémente le numéro de build automatiquement
+    increment_build_number(
+      build_number: ENV["BUILD_NUMBER"] || Time.now.to_i.to_s,
+      xcodeproj: "ios/Runner.xcodeproj"
+    )
+
+    # Synchronise les certificats et profils de provisioning
+    match(
+      type: "appstore",
+      app_identifier: ENV["APP_IDENTIFIER"],
+      git_url: ENV["MATCH_GIT_URL"],
+      readonly: true
+    )
+
+    # Build Flutter
+    sh("cd .. && #{ENV['FLUTTER_PATH'] || 'flutter'} build ios --release --no-codesign")
+
+    # Build & signe via Xcode
+    build_app(
+      workspace: "ios/Runner.xcworkspace",
+      scheme: "Runner",
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          ENV["APP_IDENTIFIER"] => "match AppStore #{ENV['APP_IDENTIFIER']}"
+        }
+      }
+    )
+
+    # Upload vers TestFlight
+    upload_to_testflight(
+      api_key_path: "fastlane/api_key.json",
+      skip_waiting_for_build_processing: true
+    )
+
+    # Notification Slack (optionnel)
+    # slack(message: "✅ Nouvelle version disponible sur TestFlight!")
+  end
+
+  desc "Build local pour tests"
+  lane :build_local do
+    match(
+      type: "development",
+      app_identifier: ENV["APP_IDENTIFIER"],
+      git_url: ENV["MATCH_GIT_URL"]
+    )
+
+    sh("cd .. && #{ENV['FLUTTER_PATH'] || 'flutter'} build ios --debug --no-codesign")
+
+    build_app(
+      workspace: "ios/Runner.xcworkspace",
+      scheme: "Runner",
+      configuration: "Debug",
+      export_method: "development"
+    )
+  end
+
+end
