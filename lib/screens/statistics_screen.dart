@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../utils/database_helper.dart';
 import '../utils/constants.dart';
+import '../utils/settings_helper.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({Key? key}) : super(key: key);
@@ -13,6 +14,7 @@ class StatisticsScreen extends StatefulWidget {
 class _StatisticsScreenState extends State<StatisticsScreen> {
   Map<String, double> categoryData = {};
   bool isLoading = true;
+  String _currency = '€';
 
   @override
   void initState() {
@@ -25,6 +27,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     final data = await DatabaseHelper.instance.getExpensesByCategory();
     setState(() {
       categoryData = data;
+      _currency = SettingsHelper.instance.getCurrency();
       isLoading = false;
     });
   }
@@ -168,7 +171,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${entry.value.toStringAsFixed(2)} €',
+                  '${entry.value.toStringAsFixed(2)} $_currency',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

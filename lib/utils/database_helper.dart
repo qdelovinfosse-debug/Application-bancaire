@@ -39,6 +39,19 @@ class DatabaseHelper {
     return box.values.fold<double>(0.0, (sum, e) => sum + e.montant);
   }
 
+  Future<double> getMonthlyExpenses() async {
+    final box = await _box;
+    final now = DateTime.now();
+    return box.values
+        .where((e) => e.date.year == now.year && e.date.month == now.month)
+        .fold<double>(0.0, (sum, e) => sum + e.montant);
+  }
+
+  Future<void> deleteAllExpenses() async {
+    final box = await _box;
+    await box.clear();
+  }
+
   Future<Map<String, double>> getExpensesByCategory() async {
     final box = await _box;
     final Map<String, double> categoryTotals = {};

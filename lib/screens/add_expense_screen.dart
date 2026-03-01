@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/expense.dart';
 import '../utils/database_helper.dart';
 import '../utils/constants.dart';
+import '../utils/settings_helper.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   final Expense? expense;
@@ -20,10 +21,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   String _selectedCategory = AppConstants.categories[0];
   DateTime _selectedDate = DateTime.now();
+  String _currency = '€';
 
   @override
   void initState() {
     super.initState();
+    _currency = SettingsHelper.instance.getCurrency();
     if (widget.expense != null) {
       _montantController.text = widget.expense!.montant.toString();
       _descriptionController.text = widget.expense!.description;
@@ -91,7 +94,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               controller: _montantController,
               style: const TextStyle(
                   color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-              decoration: _inputDecoration(hint: '0.00', suffix: '€'),
+              decoration: _inputDecoration(hint: '0.00', suffix: _currency),
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               validator: (v) {

@@ -3,7 +3,9 @@ import 'package:intl/intl.dart';
 import '../models/expense.dart';
 import '../utils/database_helper.dart';
 import '../utils/constants.dart';
+import '../utils/settings_helper.dart';
 import 'add_expense_screen.dart';
+import 'settings_screen.dart';
 import 'statistics_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -16,6 +18,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<Expense> expenses = [];
   double totalExpenses = 0.0;
+  double monthlyExpenses = 0.0;
+  double _monthlyBudget = 0.0;
+  String _currency = '€';
   bool isLoading = true;
 
   @override
@@ -33,9 +38,13 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => isLoading = true);
     final data = await DatabaseHelper.instance.getAllExpenses();
     final total = await DatabaseHelper.instance.getTotalExpenses();
+    final monthly = await DatabaseHelper.instance.getMonthlyExpenses();
     setState(() {
       expenses = data;
       totalExpenses = total;
+      monthlyExpenses = monthly;
+      _currency = SettingsHelper.instance.getCurrency();
+      _monthlyBudget = SettingsHelper.instance.getMonthlyBudget();
       isLoading = false;
     });
   }
@@ -57,12 +66,24 @@ class _HomeScreenState extends State<HomeScreen> {
               MaterialPageRoute(builder: (context) => const StatisticsScreen()),
             ),
           ),
+          IconButton(
+            icon: const Icon(Icons.settings_rounded),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const SettingsScreen()),
+              );
+              _loadExpenses();
+            },
+          ),
         ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(children: [
               _buildTotalCard(),
+              _buildBudgetCard(),
               Expanded(
                   child: expenses.isEmpty ? _buildEmptyState() : _buildExpenseList()),
             ]),
@@ -96,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
               const SizedBox(height: 6),
               Text(
-                '${totalExpenses.toStringAsFixed(2)} €',
+                '${totalExpenses.toStringAsFixed(2)} $_currency',
                 style: const TextStyle(
                     color: Colors.white,
                     fontSize: 32,
@@ -113,6 +134,61 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: const Icon(Icons.account_balance_wallet_rounded,
                 color: Colors.blueAccent, size: 28),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBudgetCard() {
+    if (_monthlyBudget <= 0) return const SizedBox.shrink();
+    final progress = (monthlyExpenses / _monthlyBudget).clamp(0.0, 1.0);
+    final isOver = monthlyExpenses > _monthlyBudget;
+    final color = isOver ? const Color(0xFFFF3B30) : Colors.blueAccent;
+    final month = DateFormat('MMMM', 'fr_FR').format(DateTime.now());
+    final monthLabel = month[0].toUpperCase() + month.substring(1);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1C1E),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Budget $monthLabel',
+                  style: TextStyle(
+                      color: Colors.grey.shade500, fontSize: 13)),
+              Text(
+                isOver
+                    ? 'Dépassé !'
+                    : '${(progress * 100).toStringAsFixed(0)} %',
+                style: TextStyle(
+                    color: color,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: const Color(0xFF2C2C2E),
+              color: color,
+              minHeight: 6,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${monthlyExpenses.toStringAsFixed(2)} $_currency / ${_monthlyBudget.toStringAsFixed(2)} $_currency',
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
           ),
         ],
       ),
@@ -241,7 +317,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Text(
-                  '-${expense.montant.toStringAsFixed(2)} €',
+                  '-${expense.montant.toStringAsFixed(2)} $_currency',
                   style: const TextStyle(
                       color: Color(0xFFFF3B30),
                       fontWeight: FontWeight.w700,
