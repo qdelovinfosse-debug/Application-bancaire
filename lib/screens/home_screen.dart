@@ -116,13 +116,17 @@ class _HomeScreenState extends State<HomeScreen> {
               Text('Total dépensé',
                   style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
               const SizedBox(height: 6),
-              Text(
-                '${totalExpenses.toStringAsFixed(2)} $_currency',
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.5),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '${totalExpenses.toStringAsFixed(2)} $_currency',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.5),
+                ),
               ),
             ],
           ),
@@ -288,13 +292,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: AppConstants.categoryColors[expense.categorie]!
+                    color: (AppConstants.categoryColors[expense.categorie] ?? Colors.grey)
                         .withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    AppConstants.categoryIcons[expense.categorie],
-                    color: AppConstants.categoryColors[expense.categorie],
+                    AppConstants.categoryIcons[expense.categorie] ?? Icons.more_horiz,
+                    color: AppConstants.categoryColors[expense.categorie] ?? Colors.grey,
                     size: 22,
                   ),
                 ),
@@ -303,7 +307,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(expense.description,
+                      Text(
+                          expense.description,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
@@ -311,17 +318,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 3),
                       Text(
                           '${expense.categorie} · ${DateFormat('dd/MM/yy').format(expense.date)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                               color: Colors.grey.shade600, fontSize: 12)),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 Text(
                   '-${expense.montant.toStringAsFixed(2)} $_currency',
                   style: const TextStyle(
                       color: Color(0xFFFF3B30),
                       fontWeight: FontWeight.w700,
-                      fontSize: 16),
+                      fontSize: 15),
                 ),
               ],
             ),
