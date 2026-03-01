@@ -21,6 +21,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _initAndLoad();
+  }
+
+  Future<void> _initAndLoad() async {
+    await DatabaseHelper.instance.initDefaultExpenses();
     _loadExpenses();
   }
 
@@ -164,32 +169,65 @@ class _HomeScreenState extends State<HomeScreen> {
       itemCount: expenses.length,
       itemBuilder: (context, index) {
         final expense = expenses[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: AppConstants.categoryColors[expense.categorie],
-              child: Icon(
-                AppConstants.categoryIcons[expense.categorie],
-                color: Colors.white,
-              ),
+        return Dismissible(
+          key: ValueKey(expense.id),
+          direction: DismissDirection.horizontal,
+          // ← Swipe droite = Supprimer
+          background: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.red.shade700,
+              borderRadius: BorderRadius.circular(12),
             ),
-            title: Text(
-              expense.description,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: 24),
+            child: const Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.delete, color: Colors.white, size: 28),
+                SizedBox(height: 4),
+                Text('Supprimer', style: TextStyle(color: Colors.white, fontSize: 12)),
+              ],
             ),
-            subtitle: Text(
-              '${expense.categorie} • ${DateFormat('dd/MM/yyyy').format(expense.date)}',
+          ),
+          // ← Swipe gauche = Modifier
+          secondaryBackground: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade700,
+              borderRadius: BorderRadius.circular(12),
             ),
-            trailing: Text(
-              '${expense.montant.toStringAsFixed(2)} €',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
-              ),
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 24),
+            child: const Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.edit, color: Colors.white, size: 28),
+                SizedBox(height: 4),
+                Text('Modifier', style: TextStyle(color: Colors.white, fontSize: 12)),
+              ],
             ),
-            onTap: () async {
+          ),
+          confirmDismiss: (direction) async {
+            if (direction == DismissDirection.startToEnd) {
+              return await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Supprimer la dépense'),
+                  content: const Text('Êtes-vous sûr de vouloir supprimer cette dépense ?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Annuler'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              ) ?? false;
+            } else {
               await Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -197,32 +235,46 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               );
               _loadExpenses();
-            },
-            onLongPress: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Supprimer la dépense'),
-                  content: const Text('Êtes-vous sûr de vouloir supprimer cette dépense ?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Annuler'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _deleteExpense(expense.id!);
-                      },
-                      child: const Text(
-                        'Supprimer',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
+              return false;
+            }
+          },
+          onDismissed: (direction) async {
+            if (direction == DismissDirection.startToEnd) {
+              await DatabaseHelper.instance.deleteExpense(expense.id!);
+              _loadExpenses();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Dépense supprimée')),
+                );
+              }
+            }
+          },
+          child: Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: AppConstants.categoryColors[expense.categorie],
+                child: Icon(
+                  AppConstants.categoryIcons[expense.categorie],
+                  color: Colors.white,
                 ),
-              );
-            },
+              ),
+              title: Text(
+                expense.description,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                '${expense.categorie} • ${DateFormat('dd/MM/yyyy').format(expense.date)}',
+              ),
+              trailing: Text(
+                '${expense.montant.toStringAsFixed(2)} €',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.redAccent,
+                ),
+              ),
+            ),
           ),
         );
       },

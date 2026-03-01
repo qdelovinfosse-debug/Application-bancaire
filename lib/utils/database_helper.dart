@@ -48,4 +48,38 @@ class DatabaseHelper {
     }
     return categoryTotals;
   }
+
+  Future<void> initDefaultExpenses() async {
+    final box = await _box;
+    if (box.isNotEmpty) return;
+    final defaults = [
+      Expense(
+        montant: 87.50,
+        categorie: 'Alimentation',
+        description: 'Courses Monoprix',
+        date: DateTime.now().subtract(const Duration(days: 1)),
+      ),
+      Expense(
+        montant: 55.00,
+        categorie: 'Transport',
+        description: 'Plein d\'essence',
+        date: DateTime.now().subtract(const Duration(days: 3)),
+      ),
+      Expense(
+        montant: 13.99,
+        categorie: 'Loisirs',
+        description: 'Abonnement Netflix',
+        date: DateTime.now().subtract(const Duration(days: 5)),
+      ),
+      Expense(
+        montant: 950.00,
+        categorie: 'Logement',
+        description: 'Loyer Mars 2026',
+        date: DateTime.now().subtract(const Duration(days: 7)),
+      ),
+    ];
+    for (final expense in defaults) {
+      await createExpense(expense);
+    }
+  }
 }
