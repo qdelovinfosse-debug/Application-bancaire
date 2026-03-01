@@ -132,6 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Container(
             padding: const EdgeInsets.all(12),
+            alignment: Alignment.center,
             decoration: BoxDecoration(
               color: Colors.blueAccent.withOpacity(0.15),
               borderRadius: BorderRadius.circular(14),
@@ -291,6 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   width: 44,
                   height: 44,
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: (AppConstants.categoryColors[expense.categorie] ?? Colors.grey)
                         .withOpacity(0.15),

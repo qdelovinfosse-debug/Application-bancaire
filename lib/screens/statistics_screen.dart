@@ -140,6 +140,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 color: AppConstants.categoryColors[entry.key],
                 borderRadius: BorderRadius.circular(8),
               ),
+              alignment: Alignment.center,
               child: Icon(
                 AppConstants.categoryIcons[entry.key],
                 color: Colors.white,
